@@ -12,6 +12,10 @@ $query_pesanan = mysqli_query($conn, "
     WHERE pesanan.id_pesanan = $id_pesanan
 ");
 $pesanan = mysqli_fetch_assoc($query_pesanan);
+if (!$pesanan) {
+    echo "<div class='alert alert-danger'>Pesanan tidak ditemukan.</div>";
+    exit;
+}
 
 $query_items = mysqli_query($conn, "
     SELECT detail_pesanan.*, produk.nama_produk, produk.gambar
@@ -99,16 +103,33 @@ $query_items = mysqli_query($conn, "
                 </tr>
             </thead>
             <tbody>
-                <?php while ($item = mysqli_fetch_assoc($query_items)): ?>
-                    <tr>
-                        <td><?= $item['nama_produk'] ?></td>
-                        <td><img src="uploads/<?= $item['gambar'] ?>" alt="Gambar Produk"></td>
-                        <td>Rp <?= number_format($item['harga'], 0, ',', '.') ?></td>
-                        <td><?= $item['jumlah'] ?></td>
-                        <td>Rp <?= number_format($item['harga'] * $item['jumlah'], 0, ',', '.') ?></td>
-                    </tr>
-                <?php endwhile; ?>
+            <tbody>
+    <?php while ($item = mysqli_fetch_assoc($query_items)): ?>
+        <tr>
+            <td><?= $item['nama_produk'] ?></td>
+            <td><img src="../uploads/<?= $item['gambar'] ?>" alt="Gambar Produk"></td>
+            <td>Rp <?= number_format($item['harga_satuan'], 0, ',', '.') ?></td>
+            <td><?= $item['jumlah'] ?></td>
+            <td>Rp <?= number_format($item['harga_satuan'] * $item['jumlah'], 0, ',', '.') ?></td>
+        </tr>
+    <?php endwhile; ?>
+
+    <?php
+    // Hitung total keseluruhan dan tampilkan
+    mysqli_data_seek($query_items, 0); // reset ulang pointer
+    $total_item = 0;
+    while ($item = mysqli_fetch_assoc($query_items)) {
+        $total_item += $item['harga_satuan'] * $item['jumlah'];
+    }
+    ?>
+    <tr>
+        <td colspan="4" class="text-end"><strong>Total Keseluruhan</strong></td>
+        <td><strong>Rp <?= number_format($total_item, 0, ',', '.') ?></strong></td>
+    </tr>
+</tbody>
+
             </tbody>
+            
         </table>
     </div>
 

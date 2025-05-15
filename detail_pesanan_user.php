@@ -2,7 +2,6 @@
 session_start();
 include "config.php";
 
-// Cek login
 if (!isset($_SESSION['user_id'])) {
     header("Location: login_user.php");
     exit;
@@ -10,7 +9,7 @@ if (!isset($_SESSION['user_id'])) {
 
 $id_pesanan = (int)$_GET['id'];
 
-// Ambil data pesanan
+// Validasi pesanan milik user
 $query_pesanan = mysqli_query($conn, "
     SELECT * FROM pesanan 
     WHERE id_pesanan = $id_pesanan 
@@ -19,7 +18,7 @@ $query_pesanan = mysqli_query($conn, "
 $pesanan = mysqli_fetch_assoc($query_pesanan);
 
 if (!$pesanan) {
-    die("Pesanan tidak ditemukan.");
+    die("Pesanan tidak ditemukan atau bukan milik Anda.");
 }
 
 // Ambil item pesanan
@@ -30,107 +29,86 @@ $query_items = mysqli_query($conn, "
     WHERE detail_pesanan.id_pesanan = $id_pesanan
 ");
 ?>
+
 <!DOCTYPE html>
-<html>
-
+<html lang="id">
 <head>
+    <meta charset="UTF-8">
     <title>Detail Pesanan</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
-
-        table {
-            border-collapse: collapse;
-            width: 100%;
-            margin-bottom: 20px;
-        }
-
-        th,
-        td {
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: left;
-        }
-
-        th {
-            background-color: #f2f2f2;
-        }
-
-        .info-section {
-            margin-bottom: 30px;
-        }
-
-        .bukti-transfer {
-            max-width: 300px;
-            margin-top: 10px;
-        }
-
-        .status-pending {
-            color: #e67e22;
-        }
-
-        .status-diproses {
-            color: #3498db;
-        }
-
-        .status-dikirim {
-            color: #2ecc71;
-        }
-
-        .status-selesai {
-            color: #27ae60;
-        }
+        .status-pending { color: #e67e22; }
+        .status-diproses { color: #3498db; }
+        .status-dikirim { color: #2ecc71; }
+        .status-selesai { color: #27ae60; }
+        .card-img-top { width: 100%; height: 150px; object-fit: cover; }
     </style>
 </head>
+<body class="bg-light">
 
-<body>
-    <h1>Detail Pesanan #<?= $pesanan['id_pesanan'] ?></h1>
+<div class="container py-5">
+    <h2 class="mb-4">Detail Pesanan #<?= $pesanan['id_pesanan'] ?></h2>
 
-    <div class="info-section">
-        <h3>Informasi Pesanan</h3>
-        <p><strong>Tanggal:</strong> <?= date('d/m/Y H:i', strtotime($pesanan['created_at'])) ?></p>
-        <p><strong>Status:</strong>
-            <span class="status-<?= str_replace('_', '-', $pesanan['status']) ?>">
-                <?php
-                $status = [
-                    'menunggu_verifikasi' => 'Menunggu Verifikasi',
-                    'diproses' => 'Diproses',
-                    'dikirim' => 'Dikirim',
-                    'selesai' => 'Selesai'
-                ];
-                echo $status[$pesanan['status']] ?? $pesanan['status'];
-                ?>
-            </span>
-        </p>
-        <p><strong>Total:</strong> Rp <?= number_format($pesanan['total'], 0, ',', '.') ?></p>
-        <p><strong>Alamat Pengiriman:</strong><br><?= nl2br(htmlspecialchars($pesanan['alamat'])) ?></p>
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">Informasi Pesanan</div>
+        <div class="card-body">
+            <p><strong>Tanggal:</strong> <?= date('d/m/Y H:i', strtotime($pesanan['created_at'])) ?></p>
+            <p><strong>Status:</strong> 
+                <span class="status-<?= $pesanan['status'] ?>">
+                    <?php
+                    $status = [
+                        'pending' => 'Pending',
+                        'diproses' => 'Diproses',
+                        'dikirim' => 'Dikirim',
+                        'selesai' => 'Selesai'
+                    ];
+                    echo $status[$pesanan['status']] ?? ucfirst($pesanan['status']);
+                    ?>
+                </span>
+            </p>
+            <p><strong>Total:</strong> Rp <?= number_format($pesanan['total'], 0, ',', '.') ?></p>
+            <p><strong>Alamat Pengiriman:</strong><br><?= nl2br(htmlspecialchars($pesanan['alamat'])) ?></p>
+        </div>
     </div>
 
-    <div class="info-section">
-        <h3>Item Pesanan</h3>
-        <table>
-            <tr>
-                <th>Produk</th>
-                <th>Gambar</th>
-                <th>Harga</th>
-                <th>Jumlah</th>
-                <th>Subtotal</th>
-            </tr>
-            <?php while ($item = mysqli_fetch_assoc($query_items)): ?>
-                <tr>
-                    <td><?= htmlspecialchars($item['nama_produk']) ?></td>
-                    <td><img src="admin/uploads/<?= $item['gambar'] ?>" width="50"></td>
-                    <td>Rp <?= number_format($item['harga'], 0, ',', '.') ?></td>
-                    <td><?= $item['jumlah'] ?></td>
-                    <td>Rp <?= number_format($item['harga'] * $item['jumlah'], 0, ',', '.') ?></td>
-                </tr>
-            <?php endwhile; ?>
-        </table>
+    <div class="card">
+        <div class="card-header bg-secondary text-white">Item Pesanan</div>
+        <div class="card-body">
+            <?php if (mysqli_num_rows($query_items) > 0): ?>
+                <div class="table-responsive">
+                    <table class="table table-bordered align-middle text-center">
+                        <thead>
+                            <tr>
+                                <th>Gambar</th>
+                                <th>Produk</th>
+                                <th>Harga</th>
+                                <th>Jumlah</th>
+                                <th>Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php while ($item = mysqli_fetch_assoc($query_items)): ?>
+                                <tr>
+                                    <td><img src="admin/uploads/<?= htmlspecialchars($item['gambar']) ?>" width="60" height="60"></td>
+                                    <td><?= htmlspecialchars($item['nama_produk']) ?></td>
+                                    <td>Rp <?= number_format($item['harga'], 0, ',', '.') ?></td>
+                                    <td><?= $item['jumlah'] ?></td>
+                                    <td>Rp <?= number_format($item['harga'] * $item['jumlah'], 0, ',', '.') ?></td>
+                                </tr>
+                            <?php endwhile; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php else: ?>
+                <p class="text-muted">Tidak ada item dalam pesanan ini.</p>
+            <?php endif; ?>
+        </div>
     </div>
 
-    <a href="index.php">&laquo; Kembali ke Beranda</a>
+    <div class="mt-4">
+        <a href="index.php" class="btn btn-outline-secondary">&laquo; Kembali ke Beranda</a>
+    </div>
+</div>
+
 </body>
-
 </html>

@@ -12,17 +12,21 @@ $id_user = $_SESSION['user_id'];
 $nama = $_POST['nama_lengkap'];
 $telepon = $_POST['no_telepon'];
 $alamat = $_POST['alamat'];
-$jumlah = 0;
+$jumlah_total = 0;
 
-// Ambil total harga dari keranjang
+// Ambil isi keranjang
 $cart_query = mysqli_query($conn, "
-    SELECT produk.harga, keranjang.jumlah 
+    SELECT keranjang.*, produk.harga, produk.id_produk
     FROM keranjang 
     JOIN produk ON keranjang.id_produk = produk.id_produk 
     WHERE keranjang.id_user = $id_user
 ");
+
+$cart_items = [];
 while ($row = mysqli_fetch_assoc($cart_query)) {
-    $jumlah += $row['harga'] * $row['jumlah'];
+    $row['subtotal'] = $row['harga'] * $row['jumlah'];
+    $jumlah_total += $row['subtotal'];
+    $cart_items[] = $row;
 }
 
 // Upload bukti transfer
@@ -36,21 +40,35 @@ $filename = time() . '_' . basename($bukti['name']);
 $target_file = $upload_dir . $filename;
 
 if (move_uploaded_file($bukti["tmp_name"], $target_file)) {
-    // Simpan data ke database
-    $query = "INSERT INTO konfirmasi_pembayaran 
-              (id_user, nama_lengkap, no_telepon, alamat, jumlah, bukti_transfer)
-              VALUES (?, ?, ?, ?, ?, ?)";
 
-    $stmt = mysqli_prepare($conn, $query);
-    mysqli_stmt_bind_param($stmt, 'isssis', $id_user, $nama, $telepon, $alamat, $jumlah, $filename);
+    // 1. Simpan ke tabel pesanan
+    $stmt = mysqli_prepare($conn, "
+        INSERT INTO pesanan (id_user, nama_lengkap, no_telepon, alamat, total, bukti_transfer, status, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, 'menunggu_verifikasi', NOW())
+    ");
+    mysqli_stmt_bind_param($stmt, 'isssss', $id_user, $nama, $telepon, $alamat, $jumlah_total, $filename);
     mysqli_stmt_execute($stmt);
 
-    // Hapus keranjang user
+    $id_pesanan = mysqli_insert_id($conn);
+
+    // 2. Simpan ke detail_pesanan
+    $stmt_detail = mysqli_prepare($conn, "
+        INSERT INTO detail_pesanan (id_pesanan, id_produk, jumlah, harga_satuan)
+        VALUES (?, ?, ?, ?)
+    ");
+
+    foreach ($cart_items as $item) {
+        mysqli_stmt_bind_param($stmt_detail, 'iiid', $id_pesanan, $item['id_produk'], $item['jumlah'], $item['harga']);
+        mysqli_stmt_execute($stmt_detail);
+    }
+
+    // 3. Kosongkan keranjang
     mysqli_query($conn, "DELETE FROM keranjang WHERE id_user = $id_user");
 
-    // Redirect ke halaman konfirmasi
-    header("Location: konfirmasi.php");
+    // Redirect ke halaman sukses / konfirmasi
+    header("Location: konfirmasi.php?id=$id_pesanan");
     exit;
+
 } else {
     echo "Gagal mengupload bukti transfer.";
 }

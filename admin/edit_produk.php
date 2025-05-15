@@ -40,10 +40,9 @@ if (!$data) {
         <label>Kategori:</label><br>
 
         <select name="kategori_produk" required>
-            <option value="Elektronik" <?php echo ($data['kategori_produk'] == 'Elektronik') ? 'selected' : ''; ?>>Elektronik</option>
-            <option value="Pakaian" <?php echo ($data['kategori_produk'] == 'Pakaian') ? 'selected' : ''; ?>>Pakaian</option>
-            <option value="Makanan" <?php echo ($data['kategori_produk'] == 'Makanan') ? 'selected' : ''; ?>>Makanan</option>
-            <option value="Aksesoris" <?php echo ($data['kategori_produk'] == 'Aksesoris') ? 'selected' : ''; ?>>Aksesoris</option>
+            <option value="Agama" <?php echo ($data['kategori_produk'] == 'Agama') ? 'selected' : ''; ?>>Agama</option>
+            <option value="Mapel" <?php echo ($data['kategori_produk'] == 'Mapel') ? 'selected' : ''; ?>>Mapel</option>
+            <option value="Novel" <?php echo ($data['kategori_produk'] == 'Novel') ? 'selected' : ''; ?>>Novel</option>
         </select><br><br>
 
 

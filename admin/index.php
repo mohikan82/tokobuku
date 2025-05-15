@@ -27,7 +27,7 @@ if (isset($_POST['submit'])) {
     $gambar_path = $upload_dir . basename($gambar_name);
 
     if (move_uploaded_file($gambar_tmp, $gambar_path)) {
-        $stmt = mysqli_prepare($conn, "INSERT INTO produk (nama_produk, kategori_produk, gambar, harga, deskripsi, stok) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt = mysqli_prepare($conn, "INSERT INTO produk (nama_produk, kategori_produk, gambar_name, harga, deskripsi, stok) VALUES (?, ?, ?, ?, ?, ?)");
         mysqli_stmt_bind_param($stmt, "sssisi", $nama_produk, $kategori_produk, $gambar_name, $harga, $deskripsi, $stok);
         mysqli_stmt_execute($stmt);
         mysqli_stmt_close($stmt);
@@ -146,7 +146,7 @@ if (isset($_POST['submit'])) {
                             <td><?= $no++ ?></td>
                             <td><?= $row['nama_produk'] ?></td>
                             <td><?= $row['kategori_produk'] ?></td>
-                            <td><img src="uploads/<?= $row['gambar'] ?>" alt="img"></td>
+                            <td><img src="uploads/<?= $row['gambar_name'] ?>" alt="img"></td>
                             <td><?= number_format($row['harga'], 0, ',', '.') ?></td>
                             <td><?= $row['deskripsi'] ?></td>
                             <td><?= $row['stok'] ?></td>
@@ -279,6 +279,7 @@ if (isset($_POST['submit'])) {
                     </tbody>
                 </table>
             </section>
+            
         </div>
     </div>
 </div>

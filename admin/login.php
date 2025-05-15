@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login Admin</title>
+    <title >Login Admin</title>
     <link rel="stylesheet" href="../bootstrap/css/bootstrap.min.css">
     <style>
         .main {
@@ -13,9 +13,8 @@
             display: flex;
             justify-content: center;
             align-items: center;
-          
         }
-
+              
         .login-box {
             width: 100%;
             max-width: 400px;
@@ -27,7 +26,7 @@
 <body>
 
     <div class="main d-flex flex-column justify-content-center align-items-center">
-        <h2 class="text-center mb-4">LOGIN ADMIN</h2>
+        <h2 class="text-center mb-4" style="color: black;">LOGIN ADMIN</h2>
         <div class="login-box p-4 shadow bg-light">
             <form action="proses_login.php" method="POST">
                 <div class="text-center mb-3">
