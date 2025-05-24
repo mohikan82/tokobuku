@@ -7,6 +7,10 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
+if (!isset($_GET['id'])) {
+    echo "ID pesanan tidak ditemukan.";
+    exit();
+}
 $id_pesanan = (int)$_GET['id'];
 
 // Validasi pesanan milik user
@@ -23,7 +27,7 @@ if (!$pesanan) {
 
 // Ambil item pesanan
 $query_items = mysqli_query($conn, "
-    SELECT detail_pesanan.*, produk.nama_produk, produk.gambar
+    SELECT detail_pesanan.*, produk.nama_produk, produk.gambar_name
     FROM detail_pesanan
     JOIN produk ON detail_pesanan.id_produk = produk.id_produk
     WHERE detail_pesanan.id_pesanan = $id_pesanan
@@ -54,7 +58,7 @@ $query_items = mysqli_query($conn, "
         <div class="card-body">
             <p><strong>Tanggal:</strong> <?= date('d/m/Y H:i', strtotime($pesanan['created_at'])) ?></p>
             <p><strong>Status:</strong> 
-                <span class="status-<?= $pesanan['status'] ?>">
+                <span class="status-<?= $pesanan['status_pesanan'] ?>">
                     <?php
                     $status = [
                         'pending' => 'Pending',
@@ -62,7 +66,7 @@ $query_items = mysqli_query($conn, "
                         'dikirim' => 'Dikirim',
                         'selesai' => 'Selesai'
                     ];
-                    echo $status[$pesanan['status']] ?? ucfirst($pesanan['status']);
+                    echo $status[$pesanan['status_pesanan']] ?? ucfirst($pesanan['status_pesanan']);
                     ?>
                 </span>
             </p>
@@ -79,8 +83,8 @@ $query_items = mysqli_query($conn, "
                     <table class="table table-bordered align-middle text-center">
                         <thead>
                             <tr>
-                                <th>Gambar</th>
                                 <th>Produk</th>
+                                <th>Gambar</th>
                                 <th>Harga</th>
                                 <th>Jumlah</th>
                                 <th>Subtotal</th>
@@ -89,8 +93,8 @@ $query_items = mysqli_query($conn, "
                         <tbody>
                             <?php while ($item = mysqli_fetch_assoc($query_items)): ?>
                                 <tr>
-                                    <td><img src="admin/uploads/<?= htmlspecialchars($item['gambar']) ?>" width="60" height="60"></td>
                                     <td><?= htmlspecialchars($item['nama_produk']) ?></td>
+                                    <td><img src="admin/uploads/<?= htmlspecialchars($item['gambar_name']) ?>" width="60" height="60"></td>
                                     <td>Rp <?= number_format($item['harga'], 0, ',', '.') ?></td>
                                     <td><?= $item['jumlah'] ?></td>
                                     <td>Rp <?= number_format($item['harga'] * $item['jumlah'], 0, ',', '.') ?></td>

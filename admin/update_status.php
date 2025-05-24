@@ -5,11 +5,11 @@ include "../config.php";
 
 
 $id_pesanan = (int)$_POST['id_pesanan'];
-$status = mysqli_real_escape_string($conn, $_POST['status']);
+$status_pesanan = mysqli_real_escape_string($conn, $_POST['status_pesanan']);
 
 mysqli_query($conn, "
     UPDATE pesanan 
-    SET status = '$status' 
+    SET status_pesanan = '$status_pesanan' 
     WHERE id_pesanan = $id_pesanan
 ");
 

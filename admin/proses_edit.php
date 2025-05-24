@@ -10,10 +10,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $stok = $_POST['stok'];
     $gambar_lama = $_POST['gambar_lama'];
 
-    // Cek apakah gambar baru di-upload
-    if ($_FILES['gambar']['name']) {
-        $gambar = $_FILES['gambar']['name'];
-        $tmp_name = $_FILES['gambar']['tmp_name'];
+    $gambar_name = $gambar_lama; // default gambar lama
+
+    // Cek apakah ada file gambar yang diupload
+    if (isset($_FILES['gambar_name']) && $_FILES['gambar_name']['error'] == 0) {
+        $gambar_name = basename($_FILES['gambar_name']['name']);
+        $tmp_name = $_FILES['gambar_name']['tmp_name'];
         $upload_dir = "uploads/";
 
         if (!file_exists($upload_dir)) {
@@ -25,27 +27,30 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             unlink($upload_dir . $gambar_lama);
         }
 
-        // Pindahkan file gambar yang di-upload
-        $gambar_path = $upload_dir . basename($gambar);
-        move_uploaded_file($tmp_name, $gambar_path);
-    } else {
-        $gambar = $gambar_lama; // Jika gambar tidak diubah, pakai gambar lama
+        // Upload gambar baru
+        move_uploaded_file($tmp_name, $upload_dir . $gambar_name);
     }
 
-    // Query untuk update produk
+    // Query untuk update data produk
     $query = "UPDATE produk SET 
                 nama_produk = '$nama_produk', 
                 kategori_produk = '$kategori_produk', 
-                gambar = '$gambar', 
+                gambar_name = '$gambar_name', 
                 harga = '$harga', 
                 deskripsi = '$deskripsi', 
                 stok = '$stok' 
               WHERE id_produk = $id_produk";
 
     if (mysqli_query($conn, $query)) {
-        echo "Produk berhasil diupdate!";
-        header("Location: index.php"); // Redirect kembali ke halaman index setelah update
+        echo "<script>
+                alert('✅ Produk berhasil diupdate!');
+                window.location.href = 'index.php';
+              </script>";
     } else {
-        echo "Error: " . mysqli_error($conn);
+        echo "<script>
+                alert('❌ Gagal mengupdate produk: " . mysqli_error($conn) . "');
+                window.history.back();
+              </script>";
     }
 }
+?>

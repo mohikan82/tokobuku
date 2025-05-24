@@ -16,8 +16,8 @@ if (isset($_POST['submit'])) {
     $stok = $_POST['stok'];
 
     // Upload gambar
-    $gambar_name = $_FILES['gambar']['name'];
-    $gambar_tmp = $_FILES['gambar']['tmp_name'];
+    $gambar_name = $_FILES['gambar_name']['name'];
+    $gambar_tmp = $_FILES['gambar_name']['tmp_name'];
     $upload_dir = "uploads/";
 
     if (!is_dir($upload_dir)) {
@@ -73,13 +73,13 @@ if (isset($_POST['submit'])) {
         <!-- Sidebar -->
         <div class="col-md-2 sidebar">
             <h4 class="text-white text-center mb-4">CpaneL Admin</h4>
-            <div class="text-center mb-3 text-white">👤 <?php echo $_SESSION['username']; ?></div>
-            <a href="#">Dashboard</a>
+            <div class="text-left mb-3 text-white">👤 <?php echo $_SESSION['username']; ?></div>
+            <a href="#index.php">Dashboard</a>
             <a href="#produk">Data Produk</a>
-            <a href="admin">Data Admin</a>
+            <a href="#admin">Data Admin</a>
             <a href="#user">Data User</a>
             <a href="#pesanan">Data Pesanan</a>
-            <form action="logout.php" method="POST" class="text-center mt-4">
+            <form action="logout.php" method="POST" class="text-left mt-4">
                 <button type="submit" class="btn btn-danger btn-sm">Log Out</button>
             </form>
         </div>
@@ -106,7 +106,7 @@ if (isset($_POST['submit'])) {
                             </select>
                         </div>
                         <div class="col">
-                            <input type="file" name="gambar" class="form-control" required>
+                            <input type="file" name="gambar_name" class="form-control" required>
                         </div>
                     </div>
                     <div class="mb-3">
@@ -140,7 +140,10 @@ if (isset($_POST['submit'])) {
                     <?php
                     $no = 1;
                     $result_produk = mysqli_query($conn, "SELECT * FROM produk");
-                    while ($row = mysqli_fetch_assoc($result_produk)) :
+                    if (!$result_produk) {
+                        echo "<tr><td colspan='8'>Error: " . mysqli_error($conn) . "</td></tr>";
+                    } else 
+                        while ($row = mysqli_fetch_assoc($result_produk)) :
                     ?>
                         <tr>
                             <td><?= $no++ ?></td>
@@ -175,11 +178,14 @@ if (isset($_POST['submit'])) {
                             <th>Aksi</th>
                         </tr>
                     </thead>
-                    <tbody>
+                <tbody>
                     <?php
                     $no = 1;
                     $result_admin = mysqli_query($conn, "SELECT * FROM admin");
-                    while ($row = mysqli_fetch_assoc($result_admin)) :
+                    if (!$result_admin) {
+                        echo "<tr><td colspan='7'>Error: " . mysqli_error($conn) . "</td></tr>";
+                    } else 
+                        while ($row = mysqli_fetch_assoc($result_admin)) :      
                     ?>
                         <tr>
                             <td><?= $no++ ?></td>
@@ -217,7 +223,10 @@ if (isset($_POST['submit'])) {
                     <?php
                     $no = 1;
                     $result_user = mysqli_query($conn, "SELECT * FROM user");
-                    while ($row = mysqli_fetch_assoc($result_user)) :
+                    if (!$result_user) {
+                        echo "<tr><td colspan='7'>Error: " . mysqli_error($conn) . "</td></tr>";
+                    } else 
+                        while ($row = mysqli_fetch_assoc($result_user)) :
                     ?>
                         <tr>
                             <td><?= $no++ ?></td>
@@ -260,25 +269,27 @@ if (isset($_POST['submit'])) {
                             <td><?= $row['id_pesanan'] ?></td>
                             <td><?= $row['username'] ?></td>
                             <td>Rp <?= number_format($row['total'], 0, ',', '.') ?></td>
-                            <td>...
+                            <td>
 
                                 <form method="POST" action="update_status.php">
                                     <input type="hidden" name="id_pesanan" value="<?= $row['id_pesanan'] ?>">
-                                    <select name="status" onchange="this.form.submit()">
-                                        <option <?= $row['status'] == 'pending' ? 'selected' : '' ?> value="pending">Pending</option>
-                                        <option <?= $row['status'] == 'diproses' ? 'selected' : '' ?> value="diproses">Diproses</option>
-                                        <option <?= $row['status'] == 'dikirim' ? 'selected' : '' ?> value="dikirim">Dikirim</option>
-                                        <option <?= $row['status'] == 'selesai' ? 'selected' : '' ?> value="selesai">Selesai</option>
+                                    <select name="status_pesanan" onchange="this.form.submit()">
+                                        <option <?= $row['status_pesanan'] == 'pending' ? 'selected' : '' ?> value="pending">Pending</option>
+                                        <option <?= $row['status_pesanan'] == 'diproses' ? 'selected' : '' ?> value="diproses">Diproses</option>
+                                        <option <?= $row['status_pesanan'] == 'dikirim' ? 'selected' : '' ?> value="dikirim">Dikirim</option>
+                                        <option <?= $row['status_pesanan'] == 'selesai' ? 'selected' : '' ?> value="selesai">Selesai</option>
                                     </select>
                                 </form>
                             </td>
                             <td><?= date('d/m/Y', strtotime($row['created_at'])) ?></td>
-                            <td><a href="detail_pesanan.php?id=<?= $row['id_pesanan'] ?>" class="btn btn-info btn-sm">Detail</a></td>
+                            <td><a href="detail_pesanan.php?id=<?= $row['id_pesanan'] ?>" class="btn btn-info btn-sm">Detail</a>
+                            <a href="hapus_pesanan.php?id=<?= $row['id_pesanan'] ?>" class="btn btn-danger btn-sm" onclick="return confirm('Yakin hapus pesanan ini?')">Hapus</a></td>
                         </tr>
                     <?php endwhile; ?>
                     </tbody>
                 </table>
             </section>
+
             
         </div>
     </div>

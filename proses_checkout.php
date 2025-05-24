@@ -2,19 +2,18 @@
 session_start();
 include "config.php";
 
-// Pastikan user login
+// Cek apakah user sudah login
 if (!isset($_SESSION['user_id'])) {
     header("Location: login_user.php");
     exit;
 }
 
 $id_user = $_SESSION['user_id'];
-$nama = $_POST['nama_lengkap'];
-$telepon = $_POST['no_telepon'];
 $alamat = $_POST['alamat'];
+$metode = $_POST['metode_pembayaran']; // Pastikan ini dikirim dari form
 $jumlah_total = 0;
 
-// Ambil isi keranjang
+// Ambil data keranjang
 $cart_query = mysqli_query($conn, "
     SELECT keranjang.*, produk.harga, produk.id_produk
     FROM keranjang 
@@ -41,31 +40,40 @@ $target_file = $upload_dir . $filename;
 
 if (move_uploaded_file($bukti["tmp_name"], $target_file)) {
 
-    // 1. Simpan ke tabel pesanan
+    // Simpan ke tabel pesanan
     $stmt = mysqli_prepare($conn, "
-        INSERT INTO pesanan (id_user, nama_lengkap, no_telepon, alamat, total, bukti_transfer, status, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, 'menunggu_verifikasi', NOW())
+        INSERT INTO pesanan (id_user, alamat, metode_pembayaran, total, bukti_transfer, status_pesanan, created_at)
+        VALUES (?, ?, ?, ?, ?, 'menunggu_verifikasi', NOW())
     ");
-    mysqli_stmt_bind_param($stmt, 'isssss', $id_user, $nama, $telepon, $alamat, $jumlah_total, $filename);
+
+    if ($stmt === false) {
+        die("Prepare statement gagal: " . mysqli_error($conn));
+    }
+
+    mysqli_stmt_bind_param($stmt, 'issds', $id_user, $alamat, $metode, $jumlah_total, $filename);
     mysqli_stmt_execute($stmt);
 
     $id_pesanan = mysqli_insert_id($conn);
 
-    // 2. Simpan ke detail_pesanan
+    // Simpan detail pesanan
     $stmt_detail = mysqli_prepare($conn, "
-        INSERT INTO detail_pesanan (id_pesanan, id_produk, jumlah, harga_satuan)
+        INSERT INTO detail_pesanan (id_pesanan, id_produk, jumlah, harga)
         VALUES (?, ?, ?, ?)
     ");
+
+    if ($stmt_detail === false) {
+        die("Prepare statement detail gagal: " . mysqli_error($conn));
+    }
 
     foreach ($cart_items as $item) {
         mysqli_stmt_bind_param($stmt_detail, 'iiid', $id_pesanan, $item['id_produk'], $item['jumlah'], $item['harga']);
         mysqli_stmt_execute($stmt_detail);
     }
 
-    // 3. Kosongkan keranjang
+    // Kosongkan keranjang
     mysqli_query($conn, "DELETE FROM keranjang WHERE id_user = $id_user");
 
-    // Redirect ke halaman sukses / konfirmasi
+    // Redirect ke halaman konfirmasi
     header("Location: konfirmasi.php?id=$id_pesanan");
     exit;
 
